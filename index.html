@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《新楓之谷：經典版》冒險者記錄</title>
+    <link rel="icon" href="./favicon.png" type="image/png">
+    <style>
+        :root {
+            --primary: #f97316;     /* 橘色主題保持不變 */
+            --bg: #111827;          /* 深色背景 */
+            --card-bg: #1f2937;     /* 卡片深色背景 */
+            --text: #e5e7eb;        /* 主要文字顏色 (淺灰白) */
+            --text-muted: #9ca3af;  /* 次要文字顏色 (中灰) */
+            --input-bg: #374151;    /* 輸入框背景 */
+            --input-border: #4b5563;/* 輸入框邊框 */
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+        }
+        .search-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text);
+        }
+        /* 針對輸入框的 placeholder 調整顏色 */
+        input::placeholder {
+            color: #9ca3af;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #ea580c;
+        }
+        button:disabled {
+            background-color: #4b5563;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #60a5fa; /* 淺藍色，在深色背景比較清楚 */
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+.grid {
+            display: grid;
+            /* 把卡片最小寬度稍微拉寬一點，讓右邊文字有空間 */
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 1px solid var(--input-border);
+            
+            /* 新增 Flexbox 排列：左圖右文 */
+            display: flex;
+            align-items: center; /* 垂直置中 */
+            gap: 15px; /* 圖片與文字的間距 */
+            text-align: left; /* 文字改為靠左對齊 */
+        }
+        .card img {
+            width: 80px;  /* 圖片縮小且固定寬度 */
+            height: 80px; /* 固定高度 */
+            object-fit: contain;
+            background-color: #374151;
+            border-radius: 4px;
+            flex-shrink: 0; /* 防止圖片因為右邊文字太多而被擠扁 */
+            margin-bottom: 0; /* 移除原本底部的 margin */
+        }
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: var(--primary);
+        }
+        .card-info p {
+            margin: 2px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .card h3 {
+            margin: 10px 0;
+            color: var(--primary);
+        }
+        .card p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>《新楓之谷：經典版》冒險者記錄</h1>
+    
+    <div class="search-box">
+        <input type="text" id="charName" placeholder="輸入角色名稱">
+        
+        <select id="jobCategory">
+            <option value="0">初心者</option>
+            <option value="1">劍士</option>
+            <option value="2">法師</option>
+            <option value="3">弓箭手</option>
+            <option value="4">盜賊</option>
+            <option value="5">海盜</option>
+            <option value="6">聖魂劍士</option>
+            <option value="7">烈焰巫師</option>
+            <option value="8">破風使者</option>
+            <option value="9">暗夜行者</option>
+            <option value="10">閃雷悍將</option>
+            <option value="11">狂狼勇士</option>
+            <option value="12">龍魔導士</option>
+        </select>
+
+        <button id="searchBtn" onclick="startSearch()">開始查詢</button>
+    </div>
+
+    <div class="status" id="statusText">等待查詢...</div>
+
+    <div class="controls" id="controls" style="display: none;">
+        <div>
+            <label>每頁顯示：</label>
+            <select id="displayLimit" onchange="changeDisplayLimit()">
+                <option value="10">10 筆</option>
+                <option value="20" selected>20 筆</option>
+                <option value="50">50 筆</option>
+                <option value="100">100 筆</option>
+            </select>
+        </div>
+        <div>
+            總共找到 <span id="totalCount">0</span> 筆資料
+        </div>
+    </div>
+
+    <div class="grid" id="resultGrid"></div>
+
+    <div class="pagination" id="pagination" style="display: none;">
+        <button onclick="prevPage()" id="prevBtn">上一頁</button>
+        <span id="pageInfo" style="line-height: 40px;">第 1 頁</span>
+        <button onclick="nextPage()" id="nextBtn">下一頁</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = `https://maple-proxy.jsean90069.workers.dev/`;
+    const IMAGE_BASE_URL = "https://maplestory-download.beanfun.com/maplestory/download/PICO8u2th740l/1/";
+    const FALLBACK_IMAGE = "./no_char.png";
+
+    // 可以在這裡擴充伺服器清單 ID = gameWorldID, name = gameServerName
+    const SERVER_LIST = [
+        { id: 0, name: "雪吉拉" },
+        { id: 1, name: "菇菇寶貝" },
+        { id: 2, name: "木妖" },
+        { id: 3, name: "海怒斯" },
+        { id: 4, name: "星光精靈" },
+        { id: 5, name: "緞帶肥肥" },
+        { id: 6, name: "綠水靈" },
+        { id: 7, name: "藍寶" },
+        { id: 8, name: "電擊象" },
+        { id: 9, name: "皮卡啾" },
+        { id: 10, name: "神獸" },
+        { id: 11, name: "寒霜冰龍" },
+        { id: 12, name: "泰勒熊" },
+        { id: 13, name: "三眼章魚" },
+        { id: 14, name: "火獨眼獸" },
+        { id: 15, name: "鯨魚號" },
+        { id: 16, name: "蝴蝶精" },
+        { id: 17, name: "巴洛古" },
+    ];
+
+    let allCharacters = [];
+    let currentPage = 1;
+    let itemsPerPage = 20;
+
+    // 延遲函數 (Sleep)
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function startSearch() {
+        const name = document.getElementById('charName').value.trim();
+        const jobCode = parseInt(document.getElementById('jobCategory').value);
+        const jobName = document.getElementById('jobCategory').options[document.getElementById('jobCategory').selectedIndex].text;
+        
+        const btn = document.getElementById('searchBtn');
+        const status = document.getElementById('statusText');
+
+        if (!name) return alert("請輸入角色名稱！");
+
+        // 初始化狀態
+        btn.disabled = true;
+        allCharacters = [];
+        currentPage = 1;
+        document.getElementById('resultGrid').innerHTML = '';
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('pagination').style.display = 'none';
+
+        try {
+            // 第一層迴圈：遍歷伺服器
+            for (const server of SERVER_LIST) {
+                // 第二層迴圈：遍歷年份
+                for (let year = 2005; year <= 2010; year++) {
+                    let apiPage = 1;
+                    const pageSize = 200;
+                    let hasMore = true;
+
+                    // 第三層迴圈：處理 API 分頁
+                    while (hasMore) {
+                        status.innerText = `正在搜尋 [${server.name}] ${year} 年資料... (分頁 ${apiPage})`;
+                        
+                        const payload = {
+                            name: name,
+                            page: apiPage,
+                            pageSize: pageSize,
+                            jobCategoryCode: jobCode,
+                            gameWorldID: server.id,
+                            gameServerName: server.name,
+                            registerYear: year
+                        };
+
+                        const response = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const resJson = await response.json();
+
+                        if (resJson.code === 1 && resJson.data && resJson.data.list) {
+                            const currentList = resJson.data.list;
+                            const totalCnt = resJson.data.cnt;
+
+                            currentList.forEach(char => {
+                                allCharacters.push({
+                                    ...char,
+                                    registerYear: year,
+                                    serverName: server.name,
+                                    jobName: jobName
+                                });
+                            });
+
+                            if (totalCnt > apiPage * pageSize) {
+                                apiPage++;
+                            } else {
+                                hasMore = false;
+                            }
+                        } else {
+                            hasMore = false;
+                        }
+
+                        // 每次發出請求後，暫停 800 毫秒，避免被 API 伺服器封鎖 (Rate Limit)
+                        await delay(800); 
+                    }
+                }
+            }
+
+            status.innerText = "查詢完成！";
+            document.getElementById('totalCount').innerText = allCharacters.length;
+            
+            if (allCharacters.length > 0) {
+                document.getElementById('controls').style.display = 'flex';
+                document.getElementById('pagination').style.display = 'flex';
+                renderPage();
+            } else {
+                status.innerText = "查詢完畢，找不到符合的角色。";
+            }
+
+        } catch (error) {
+            console.error(error);
+            status.innerText = "查詢失敗或中斷！請檢查網路狀態或按 F12 查看主控台錯誤。";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // --- 以下為前端分頁與渲染邏輯，無需更動 ---
+function renderPage() {
+        const grid = document.getElementById('resultGrid');
+        grid.innerHTML = '';
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageData = allCharacters.slice(startIndex, endIndex);
+
+        pageData.forEach(char => {
+            const imgUrl = `${IMAGE_BASE_URL}${char.characterID}%202_0_0.png`;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // 使用 card-info 將文字包裝起來，配合 CSS 的 Flex 左右排版
+            card.innerHTML = `
+                <img src="${imgUrl}" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE}';" alt="角色圖片">
+                <div class="card-info">
+                    <h3>${char.characterName}</h3>
+                    <p><strong>伺服器：</strong>${char.serverName}</p>
+                    <p><strong>職業：</strong>${char.jobName}</p>
+                    <p><strong>年份：</strong>${char.registerYear}</p>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        updatePaginationUI();
+    }
+
+    function changeDisplayLimit() {
+        itemsPerPage = parseInt(document.getElementById('displayLimit').value);
+        currentPage = 1;
+        renderPage();
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPage();
+        }
+    }
+
+    function nextPage() {
+        const maxPage = Math.ceil(allCharacters.length / itemsPerPage);
+        if (currentPage < maxPage) {
+            currentPage++;
+            renderPage();
+        }
+    }
+
+    function updatePaginationUI() {
+        const maxPage = Math.ceil(allCharacters.length / itemsPerPage) || 1;
+        document.getElementById('pageInfo').innerText = `第 ${currentPage} / ${maxPage} 頁`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage >= maxPage;
+    }
+</script>
+
+</body>
+</html>
